@@ -54,13 +54,13 @@ enum uf_type {
 /* structure for Upgrade File */
 struct uf_entry {
 	enum uf_type type;
-    char *filename;
-    char *out_filename;
-    size_t size;
-    uint8_t *ptr;
-    uint32_t *ptr32;
-    struct uf_entry *seq_next;
-    struct uf_entry *seq_prev;
+	char *filename;
+	char *out_filename;
+	size_t size;
+	uint8_t *ptr;
+	uint32_t *ptr32;
+	struct uf_entry *seq_next;
+	struct uf_entry *seq_prev;
 };
 
 static struct conf {
@@ -86,108 +86,108 @@ usageexit(void) {
 int
 main(int argc, char **argv) {
 	char *upgrade_dir, *extract_dir;
-    DIR *dir;
-    struct stat fstat;
-    struct dirent *de;
-    struct uf_entry *uf, *uf2;
-    struct uf_entry *ufs[UF_MAX];
-    unsigned int n, n2;
-    unsigned int ufs_count = 0;
-    struct uf_entry *ucf = NULL;
-    struct uf_entry *met = NULL;
-    struct uf_entry *zfj = NULL;
-    int ch;
+	DIR *dir;
+	struct stat fstat;
+	struct dirent *de;
+	struct uf_entry *uf, *uf2;
+	struct uf_entry *ufs[UF_MAX];
+	unsigned int n, n2;
+	unsigned int ufs_count = 0;
+	struct uf_entry *ucf = NULL;
+	struct uf_entry *met = NULL;
+	struct uf_entry *zfj = NULL;
+	int ch;
 
-    while ((ch = getopt(argc, argv, "v")) != -1) {
-            switch (ch) {
-            case 'v':
-                conf.verbose++;
-                break;
-            default:
-                usageexit();
-            }
-    }
-    argc -= optind;
-    argv += optind;
+	while ((ch = getopt(argc, argv, "v")) != -1) {
+		switch (ch) {
+			case 'v':
+				conf.verbose++;
+				break;
+			default:
+				usageexit();
+		}
+	}
+	argc -= optind;
+	argv += optind;
 	if (argc < 1)
 		usageexit();
 
 	upgrade_dir = realpath(argv[0], NULL);
 	printf("upgrade_directory: %s\n", upgrade_dir);
-    extract_dir = "extract";
-    if (stat(extract_dir, &fstat) == -1) {
-        mkdir(extract_dir, 0700);
-    }
+	extract_dir = "extract";
+	if (stat(extract_dir, &fstat) == -1) {
+		mkdir(extract_dir, 0700);
+	}
 	extract_dir = realpath(extract_dir, NULL);
 	printf("extract_directory: %s\n", extract_dir);
 
-    dir = opendir(upgrade_dir);
-    if (!dir)
-        errx(1, "could not open directory");
+	dir = opendir(upgrade_dir);
+	if (!dir)
+		errx(1, "could not open directory");
 
-    printf("[+] reading files in archives directory\n");
+	printf("[+] reading files in archives directory\n");
 
-    while ((de = readdir(dir)) != NULL) {
-        int f;
-        char filepath[NAME_MAX];
+	while ((de = readdir(dir)) != NULL) {
+		int f;
+		char filepath[NAME_MAX];
 
-        if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, ".."))
-            continue;
-        snprintf(filepath, sizeof(filepath), "%s/%s", upgrade_dir, de->d_name);
-        if (stat(filepath, &fstat) == -1) {
-            perror(filepath);
-            continue;
-        }
-        if ((fstat.st_mode & S_IFMT) != S_IFREG) {
-            warnx("not a regular file, skipping: %s", de->d_name);
-            continue;
-        }
-        if (fstat.st_size < 0xEB) {
-            warnx("file too small: %s", de->d_name);
-            continue;
-        }
-        f = open(filepath, O_RDONLY);
-        if (!f) {
-            warnx("could not open file: %s", de->d_name);
-            continue;
-        }
+		if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, ".."))
+			continue;
+		snprintf(filepath, sizeof(filepath), "%s/%s", upgrade_dir, de->d_name);
+		if (stat(filepath, &fstat) == -1) {
+			perror(filepath);
+			continue;
+		}
+		if ((fstat.st_mode & S_IFMT) != S_IFREG) {
+			warnx("not a regular file, skipping: %s", de->d_name);
+			continue;
+		}
+		if (fstat.st_size < 0xEB) {
+			warnx("file too small: %s", de->d_name);
+			continue;
+		}
+		f = open(filepath, O_RDONLY);
+		if (!f) {
+			warnx("could not open file: %s", de->d_name);
+			continue;
+		}
 
-        uf = malloc(sizeof(struct uf_entry));
-        bzero(uf, sizeof(struct uf_entry));
-        uf->filename = strdup(de->d_name);
-        uf->size = (size_t) fstat.st_size;
+		uf = malloc(sizeof(struct uf_entry));
+		bzero(uf, sizeof(struct uf_entry));
+		uf->filename = strdup(de->d_name);
+		uf->size = (size_t) fstat.st_size;
 
-        uf->ptr = mmap(0, uf->size, PROT_READ, MAP_PRIVATE, f, 0);
+		uf->ptr = mmap(0, uf->size, PROT_READ, MAP_PRIVATE, f, 0);
 		uf->ptr32 = (uint32_t *)uf->ptr;
-        if (!uf->ptr) {
-            warnx("could not mmap file: %s", de->d_name);
-            close(f);
-            uf_free(uf);
-            continue;
-        }
-        if (strncmp((char *)uf->ptr, de->d_name, 8)) {
-            warnx("not an Ericsson Upgrade file, skipping: %s", de->d_name);
-            close(f);
-            uf_free(uf);
-            continue;
-        }
-        printf("%s [%zu] ", de->d_name, uf->size);
-        if (!strncmp(de->d_name, "ZFJ", 3)) {
-            printf("found Upgrade File Info\n");
+		if (!uf->ptr) {
+			warnx("could not mmap file: %s", de->d_name);
+			close(f);
+			uf_free(uf);
+			continue;
+		}
+		if (strncmp((char *)uf->ptr, de->d_name, 8)) {
+			warnx("not an Ericsson Upgrade file, skipping: %s", de->d_name);
+			close(f);
+			uf_free(uf);
+			continue;
+		}
+		printf("%s [%zu] ", de->d_name, uf->size);
+		if (!strncmp(de->d_name, "ZFJ", 3)) {
+			printf("found Upgrade File Info\n");
 			uf->type = UF_ZFJ;
 			uf->out_filename = strdup("ZFJ_file_info.txt");
-            zfj = uf;
-        } else if (!strncmp(de->d_name, "UCF", 3)) {
-            printf("found Upgrade Control File\n");
+			zfj = uf;
+		} else if (!strncmp(de->d_name, "UCF", 3)) {
+			printf("found Upgrade Control File\n");
 			uf->type = UF_UCF;
 			uf->out_filename = strdup("UCF_upgrade_control_file.xml");
-            ucf = uf;
-        } else if (!strncmp(de->d_name, "MET", 3)) {
-            printf("found Metadata File\n");
+			ucf = uf;
+		} else if (!strncmp(de->d_name, "MET", 3)) {
+			printf("found Metadata File\n");
 			uf->type = UF_MET;
 			uf->out_filename = strdup("MET_metadata.xml");
-            met = uf;
-        } else if (uf->ptr[OFFSET_ZLIB_START] == 0x78 && uf->ptr[OFFSET_ZLIB_START+1] == 0x9C) {
+			met = uf;
+		} else if (uf->ptr[OFFSET_ZLIB_START] == 0x78 && uf->ptr[OFFSET_ZLIB_START+1] == 0x9C) {
 			printf("infered zlib archive\n");
 			uf->type = UF_ZLIB;
 		} else {
@@ -195,17 +195,17 @@ main(int argc, char **argv) {
 			uf->type = UF_UNKNOWN;
 		}
 
-        ufs[ufs_count] = uf;
-        ufs_count++;
-        close(f);
-    }
-    closedir(dir);
+		ufs[ufs_count] = uf;
+		ufs_count++;
+		close(f);
+	}
+	closedir(dir);
 
-    printf("[+] summary of Upgrade files\n");
-    printf("found %d Upgrade files\n", ufs_count);
-    printf("found Upgrade File Info (ZFJ): %s\n", zfj ? zfj->filename : "no");
-    printf("found Upgrade Control File (UCF): %s\n", ucf ? ucf->filename : "no");
-    printf("found Metadata File (MET): %s\n", met ? met->filename : "no");
+	printf("[+] summary of Upgrade files\n");
+	printf("found %d Upgrade files\n", ufs_count);
+	printf("found Upgrade File Info (ZFJ): %s\n", zfj ? zfj->filename : "no");
+	printf("found Upgrade Control File (UCF): %s\n", ucf ? ucf->filename : "no");
+	printf("found Metadata File (MET): %s\n", met ? met->filename : "no");
 
 	printf("[+] looking for file sequences\n");
 	for (n=0; n<ufs_count; n++) {
@@ -226,31 +226,31 @@ main(int argc, char **argv) {
 		}
 	}
 
-    printf("[+] unpacking files\n");
+	printf("[+] unpacking files\n");
 
-    for (n=0; n<ufs_count; n++) {
-        uf = ufs[n];
+	for (n=0; n<ufs_count; n++) {
+		uf = ufs[n];
 
-        if (uf->seq_prev)
-            continue;
+		if (uf->seq_prev)
+			continue;
 		uf_extract(uf, extract_dir);
-    }
+	}
 
-    printf("[*] done, extracted %d files to %s\n", stats.extracted_files, extract_dir);
+	printf("[*] done, extracted %d files to %s\n", stats.extracted_files, extract_dir);
 
-    for (n=0; n<ufs_count; n++) {
-        uf_free(ufs[n]);
-    }
+	for (n=0; n<ufs_count; n++) {
+		uf_free(ufs[n]);
+	}
 	free(upgrade_dir);
 	free(extract_dir);
 
-    return 0;
+	return 0;
 }
 
 int
 uf_extract(struct uf_entry *uf, char *extract_dir) {
-    char out_filepath[NAME_MAX];
-    FILE *f;
+	char out_filepath[NAME_MAX];
+	FILE *f;
 	size_t out_len, uncompressed_size_result;
 	unsigned char *buf = NULL;
 	size_t buf_size = 0;
@@ -268,8 +268,8 @@ uf_extract(struct uf_entry *uf, char *extract_dir) {
 		}
 	}
 	printf("extracting %s to %s\n", uf->filename, uf->out_filename);
-    snprintf(out_filepath, NAME_MAX, "%s/%s", extract_dir, uf->out_filename);
-    f = fopen(out_filepath, "w");
+	snprintf(out_filepath, NAME_MAX, "%s/%s", extract_dir, uf->out_filename);
+	f = fopen(out_filepath, "w");
 
 	switch (uf->type) {
 	case UF_ZFJ:
@@ -319,18 +319,18 @@ uf_extract(struct uf_entry *uf, char *extract_dir) {
     fclose(f);
 	stats.extracted_files++;
 
-    return 0;
+	return 0;
 }
 
 void
 uf_free(struct uf_entry *uf) {
-    if (uf->filename)
-        free(uf->filename);
-    if (uf->out_filename)
-        free(uf->out_filename);
-    if (uf->ptr) {
-        munmap(uf->ptr, uf->size);
-    }
-    free(uf);
+	if (uf->filename)
+		free(uf->filename);
+	if (uf->out_filename)
+		free(uf->out_filename);
+	if (uf->ptr) {
+		munmap(uf->ptr, uf->size);
+	}
+	free(uf);
 }
 

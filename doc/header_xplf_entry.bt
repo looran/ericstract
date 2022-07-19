@@ -1,0 +1,22 @@
+//------------------------------------------------
+//--- 010 Editor v12.0.1 Binary Template
+//
+//      File: 
+//   Authors: 
+//   Version: 
+//   Purpose: see ericstract.c
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+struct header_xplf_entry {
+    uint32 type <fgcolor=0x0000AA>;
+    uint32 unknown1;
+    uint32 header_len <fgcolor=0xAA0000>;
+    uint32 unknown2[3];
+    char   name[32] <fgcolor=0x00AA00>;
+    uint32 unknown3;
+    uint32 zero[8];
+} file;

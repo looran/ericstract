@@ -1,5 +1,8 @@
 with_clang:
-	clang -g -O0 -Wall -lz -o ericstract ericstract.c
+	clang -Wall -lz -o ericstract ericstract.c
 
 with_gcc:
-	gcc -g -O0 -Wall -lz -o ericstract ericstract.c
+	gcc -Wall -lz -o ericstract ericstract.c
+
+debug:
+	clang -g -O0 -Weverything -lz -o ericstract ericstract.c

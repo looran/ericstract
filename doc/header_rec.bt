@@ -1,0 +1,29 @@
+//------------------------------------------------
+//--- 010 Editor v12.0.1 Binary Template
+//
+//      File: 
+//   Authors: 
+//   Version: 
+//   Purpose: see ericstract.c
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+struct header_rec {
+	char	 name[8] <fgcolor=0x00AA00>;
+	uint32   size <fgcolor=0xAA0000>;
+	uint32   type <fgcolor=0x0000AA>;
+	uint32   unknown1;
+	uint32   unknown2;
+	uint32   two;
+	uint32   unknown3;
+	char	 id[8] <fgcolor=0x00AA00>;
+	uint32   multirec_unknown1;
+	uint32   multirec_unknown2;
+	uint32   zero;
+	uint32   multirec_unknown3;
+	uint32   rec_count <fgcolor=0xAA5500>;
+	uint32   first_rec_no_index;
+} file;

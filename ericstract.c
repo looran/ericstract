@@ -44,16 +44,17 @@
 #include "zlib.h"
 
 /*
- * Upgrade Packages in OMT format consist of multiple files containing each a header followed by content data.
- * The overall upgrade content is often distributed in multiple Upgrade Files, one for each component and version.
- * One Upgrade File contains multiple pieces of data called 'records', that can themselves contain other records.
- * Certain type of records can also be split accross multiple Upgrade Files.
+ * Upgrade Packages in OMT format consist of multiple files each containing a tree of imbricated headers and data.
+ * Each header describes information such as name, size, and version of the data it contains and is called a 'record'.
+ * A single Upgrade File can contain tens of imbricated records, with different header formats and different type of data.
+ * Often, an Upgrade File holds software software components dedicated to run on a specific hardware system.
  * The content of a record can be raw or compressed using zlib, and can contain files of various other formats: uImage, cpio, FPGA bitstream, text files...
+ * Certain type of records can also be split accross multiple Upgrade Files, allowing for smaller per-file size.
  * This program extracts, recombine and structure records to properly named files, and then executes binwalk on them.
  * 
  * Headers:
- * There are at least 2 main types of record headers: Normal and XPLF
- * - Normal headers
+ * There is at least 2 main types of record headers: Normal and XPLF
+ * - Normal record headers
  * Normal header is described by the 'struct header_rec' is this program.
  * They are found at the start of files and their sub-records.
  * Record headers consist of a fixed-len header followed by an offset table to next records, followed by actual content.
@@ -61,10 +62,13 @@
  * then B and so on. This header is described in 'struct header_archive'.
  * Compressed data uses it's own sub-header inside archives, described by 'struct header_archive_part'.
  * Differentiation of content type is based of the name included in the record header.
- * - XPLF headers
+ * - XPLF record headers
  * XPLF header is described by the 'struct header_xplf'.
  * They are found after decompression of a file record content, to describe another layer of compressed content.
  * Content described by a XPLF header can be compressed using lzma and encapsulated using xz format.
+ * - other type of record headers
+ * There seem to be a wide range of type of record headers, which this tool does it's best to extract itself or using binwalk.
+ * Each platform probably knows about types of files specific to them, making it not obvious to create a generic extractor.
  *
  * CRC:
  * At the end of each record and each file, a 4-byte CRC is present.
